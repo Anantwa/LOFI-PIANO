@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Lofi Keys</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-deep:#1f1828;
+    --bg-deep2:#181220;
+    --panel:#2c2238;
+    --panel-edge:#3a2e49;
+    --amber:#e8a87c;
+    --rose:#d88c9a;
+    --teal:#7fb3ac;
+    --cream:#f3e9dc;
+    --cream-dim:#cdbfae;
+    --shadow-deep: rgba(0,0,0,0.55);
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; min-height:100vh;
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, rgba(216,140,154,0.12), transparent 60%),
+      radial-gradient(ellipse 700px 400px at 90% 110%, rgba(127,179,172,0.10), transparent 60%),
+      linear-gradient(180deg, var(--bg-deep), var(--bg-deep2));
+    color:var(--cream);
+    font-family:'Inter',sans-serif;
+    overflow-x:hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .motes{position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:0;}
+  .mote{
+    position:absolute; bottom:-10px; border-radius:50%;
+    background:var(--amber); opacity:0.25;
+    animation:rise linear infinite;
+  }
+  @keyframes rise{
+    0%{ transform:translateY(0) translateX(0); opacity:0; }
+    10%{ opacity:0.35; }
+    90%{ opacity:0.15; }
+    100%{ transform:translateY(-110vh) translateX(20px); opacity:0; }
+  }
+  .wrap{
+    position:relative; z-index:1;
+    max-width:760px; margin:0 auto; padding:32px 18px 60px;
+    display:flex; flex-direction:column; align-items:center; gap:22px;
+  }
+  header{ text-align:center; }
+  h1{
+    font-family:'Space Grotesk',sans-serif; font-weight:700;
+    font-size:clamp(28px,6vw,42px); letter-spacing:0.5px; margin:0;
+    color:var(--cream);
+    text-shadow: 0 0 24px rgba(232,168,124,0.25);
+  }
+  .sub{
+    font-size:13px; color:var(--cream-dim); margin-top:6px;
+    letter-spacing:0.3px;
+  }
+
+  .deck{
+    width:100%; background:linear-gradient(180deg,var(--panel),#251c30);
+    border:1px solid var(--panel-edge);
+    border-radius:18px; padding:18px 20px;
+    box-shadow: 0 14px 40px var(--shadow-deep), inset 0 1px 0 rgba(255,255,255,0.04);
+    display:flex; align-items:center; gap:20px; flex-wrap:wrap;
+  }
+  .reel-box{
+    display:flex; align-items:center; gap:14px; flex:0 0 auto;
+  }
+  .reel{
+    width:54px; height:54px; border-radius:50%;
+    background: radial-gradient(circle at 50% 50%, #43354f 0 28%, #2c2238 29% 60%, #1f1828 61% 100%);
+    border:2px solid var(--panel-edge);
+    position:relative;
+    animation: spin 3.2s linear infinite;
+    animation-play-state: paused;
+  }
+  .reel::before{
+    content:''; position:absolute; inset:0; border-radius:50%;
+    background:
+      linear-gradient(0deg, transparent 47%, rgba(232,168,124,0.55) 49%, rgba(232,168,124,0.55) 51%, transparent 53%),
+      linear-gradient(90deg, transparent 47%, rgba(232,168,124,0.35) 49%, rgba(232,168,124,0.35) 51%, transparent 53%);
+  }
+  .reel.spinning{ animation-play-state: running; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .counter{
+    font-family:'Space Mono',monospace; font-size:15px; color:var(--amber);
+    letter-spacing:1px;
+  }
+  .counter .lbl{ display:block; font-size:9px; color:var(--cream-dim); letter-spacing:1.5px; margin-bottom:3px; }
+
+  .knobs{
+    display:flex; gap:22px; flex-wrap:wrap; flex:1 1 auto; justify-content:flex-end;
+  }
+  .knob{ display:flex; flex-direction:column; align-items:center; gap:6px; min-width:70px; }
+  .knob label{
+    font-size:9.5px; letter-spacing:1.3px; color:var(--cream-dim); font-weight:600;
+  }
+  input[type=range]{
+    -webkit-appearance:none; appearance:none;
+    width:80px; height:4px; border-radius:3px;
+    background:linear-gradient(90deg,var(--rose),var(--teal));
+    outline:none; cursor:pointer;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:16px; height:16px; border-radius:50%;
+    background:var(--cream); border:2px solid var(--amber);
+    box-shadow:0 2px 6px rgba(0,0,0,0.4);
+  }
+  input[type=range]::-moz-range-thumb{
+    width:16px; height:16px; border-radius:50%;
+    background:var(--cream); border:2px solid var(--amber); cursor:pointer;
+  }
+
+  .hint{
+    font-size:12px; color:var(--cream-dim); text-align:center; line-height:1.6;
+    max-width:480px;
+  }
+  .hint b{ color:var(--amber); font-weight:600; }
+
+  .piano-outer{
+    width:100%; max-width:680px; overflow-x:auto; padding-bottom:6px;
+    -webkit-overflow-scrolling:touch;
+  }
+  .piano{
+    position:relative; display:flex;
+    height:170px; min-width:520px;
+    background:#15101c; border-radius:10px;
+    padding:10px 10px 0; gap:3px;
+    box-shadow: inset 0 0 30px rgba(0,0,0,0.6), 0 10px 30px var(--shadow-deep);
+  }
+  .white-row{ display:flex; flex:1; gap:3px; }
+  .key{
+    position:relative; user-select:none; cursor:pointer;
+    display:flex; align-items:flex-end; justify-content:center;
+    padding-bottom:10px; font-family:'Space Mono',monospace;
+    transition: transform 0.05s, box-shadow 0.08s, background 0.08s;
+  }
+  .white{
+    flex:1; background:linear-gradient(180deg,#f3e9dc,#e3d4c0);
+    border-radius:0 0 7px 7px; color:#5c4a3a; font-size:12px;
+    box-shadow: 0 4px 0 #b8a48d, 0 6px 10px rgba(0,0,0,0.3);
+  }
+  .white.active{
+    background:linear-gradient(180deg,#e8a87c,#d88c9a);
+    transform:translateY(3px);
+    box-shadow: 0 1px 0 #8a6650, inset 0 0 14px rgba(255,255,255,0.4);
+    color:#3a2418;
+  }
+  .black{
+    position:absolute; top:10px; width:6.2%; height:62%; z-index:2;
+    background:linear-gradient(180deg,#3a2e49,#181220);
+    border-radius:0 0 5px 5px; color:var(--cream-dim); font-size:10px;
+    box-shadow: 0 4px 0 #0c0810, 0 6px 10px rgba(0,0,0,0.5);
+  }
+  .black.active{
+    background:linear-gradient(180deg,#7fb3ac,#4f7a74);
+    transform:translateY(3px);
+    box-shadow: 0 1px 0 #0c0810, inset 0 0 10px rgba(255,255,255,0.3);
+    color:var(--cream);
+  }
+  .key-label{ pointer-events:none; opacity:0.85; text-transform:uppercase; }
+
+  footer{
+    font-size:11px; color:var(--cream-dim); opacity:0.7; text-align:center;
+  }
+
+  @media (max-width:480px){
+    .deck{ flex-direction:column; align-items:stretch; }
+    .knobs{ justify-content:space-between; gap:10px; }
+    .reel-box{ justify-content:center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="motes" id="motes"></div>
+
+<div class="wrap">
+  <header>
+    <h1>Lofi Keys</h1>
+    <div class="sub">a soft little piano for late nights &amp; slow afternoons</div>
+  </header>
+
+  <div class="deck">
+    <div class="reel-box">
+      <div class="reel" id="reel"></div>
+      <div class="counter"><span class="lbl">SESSION</span><span id="counterText">00:00</span></div>
+    </div>
+    <div class="knobs">
+      <div class="knob">
+        <input type="range" id="warmth" min="0" max="100" value="55">
+        <label>WARMTH</label>
+      </div>
+      <div class="knob">
+        <input type="range" id="reverb" min="0" max="100" value="40">
+        <label>REVERB</label>
+      </div>
+      <div class="knob">
+        <input type="range" id="crackle" min="0" max="100" value="20">
+        <label>CRACKLE</label>
+      </div>
+      <div class="knob">
+        <input type="range" id="volume" min="0" max="100" value="70">
+        <label>VOLUME</label>
+      </div>
+    </div>
+  </div>
+
+  <div class="piano-outer">
+    <div class="piano" id="piano"></div>
+  </div>
+
+  <div class="hint">
+    Play with your <b>laptop keyboard</b> — keys <b>A S D F G H J K L ;</b> are the white notes,
+    <b>W E T Y U O P</b> are the black notes — or just <b>tap the keys</b> on your phone screen.
+  </div>
+
+  <footer>made with Web Audio API — no sign-up, no download, just press play</footer>
+</div>
+
+<script>
+// ---------- floating dust motes ----------
+const motesEl = document.getElementById('motes');
+for(let i=0;i<18;i++){
+  const m = document.createElement('div');
+  m.className='mote';
+  const size = 2+Math.random()*3;
+  m.style.width=size+'px'; m.style.height=size+'px';
+  m.style.left = (Math.random()*100)+'%';
+  m.style.animationDuration = (10+Math.random()*14)+'s';
+  m.style.animationDelay = (Math.random()*14)+'s';
+  motesEl.appendChild(m);
+}
+
+// ---------- note map ----------
+// key : [frequency, isBlack, afterWhiteIndex(for black placement)]
+const NOTE_DEFS = [
+  {key:'a', freq:261.63, type:'white'},
+  {key:'w', freq:277.18, type:'black'},
+  {key:'s', freq:293.66, type:'white'},
+  {key:'e', freq:311.13, type:'black'},
+  {key:'d', freq:329.63, type:'white'},
+  {key:'f', freq:349.23, type:'white'},
+  {key:'t', freq:369.99, type:'black'},
+  {key:'g', freq:392.00, type:'white'},
+  {key:'y', freq:415.30, type:'black'},
+  {key:'h', freq:440.00, type:'white'},
+  {key:'u', freq:466.16, type:'black'},
+  {key:'j', freq:493.88, type:'white'},
+  {key:'k', freq:523.25, type:'white'},
+  {key:'o', freq:554.37, type:'black'},
+  {key:'l', freq:587.33, type:'white'},
+  {key:'p', freq:622.25, type:'black'},
+  {key:';', freq:659.25, type:'white'},
+];
+
+const whiteKeys = NOTE_DEFS.filter(n=>n.type==='white');
+const blackKeys = NOTE_DEFS.filter(n=>n.type==='black');
+const whiteCount = whiteKeys.length;
+
+// build piano DOM
+const pianoEl = document.getElementById('piano');
+const whiteRow = document.createElement('div');
+whiteRow.className='white-row';
+pianoEl.appendChild(whiteRow);
+
+const keyElByKey = {};
+
+whiteKeys.forEach(n=>{
+  const el = document.createElement('div');
+  el.className='key white';
+  el.dataset.key = n.key;
+  el.innerHTML = `<span class="key-label">${n.key}</span>`;
+  whiteRow.appendChild(el);
+  keyElByKey[n.key]=el;
+});
+
+// black key placement: after these white-index positions (0-indexed within whiteKeys)
+const blackAfterIndex = [0,1,3,4,5,7,8];
+blackKeys.forEach((n,i)=>{
+  const el = document.createElement('div');
+  el.className='key black';
+  el.dataset.key = n.key;
+  el.innerHTML = `<span class="key-label">${n.key}</span>`;
+  const afterIdx = blackAfterIndex[i];
+  const leftPct = ((afterIdx+1)/whiteCount)*100;
+  el.style.left = `calc(${leftPct}% - 3.1%)`;
+  pianoEl.appendChild(el);
+  keyElByKey[n.key]=el;
+});
+
+// ---------- audio engine ----------
+let ctx = null;
+let masterGain, warmthFilter, dryGain, wetGain, convolver, crackleGain, crackleSource;
+const activeNotes = {}; // key -> {osc1,osc2,gain}
+const reelEl = document.getElementById('reel');
+
+function buildImpulse(duration, decay){
+  const rate = ctx.sampleRate;
+  const length = rate*duration;
+  const impulse = ctx.createBuffer(2, length, rate);
+  for(let c=0;c<2;c++){
+    const data = impulse.getChannelData(c);
+    for(let i=0;i<length;i++){
+      data[i] = (Math.random()*2-1) * Math.pow(1-i/length, decay);
+    }
+  }
+  return impulse;
+}
+
+function buildCrackleBuffer(){
+  const rate = ctx.sampleRate;
+  const length = rate*4;
+  const buffer = ctx.createBuffer(1, length, rate);
+  const data = buffer.getChannelData(0);
+  for(let i=0;i<length;i++){
+    let v = (Math.random()*2-1)*0.15;
+    if(Math.random() < 0.0025) v += (Math.random()*2-1)*0.9; // occasional pop
+    data[i]=v;
+  }
+  return buffer;
+}
+
+function initAudio(){
+  if(ctx) return;
+  ctx = new (window.AudioContext || window.webkitAudioContext)();
+
+  masterGain = ctx.createGain();
+  masterGain.gain.value = document.getElementById('volume').value/100;
+
+  warmthFilter = ctx.createBiquadFilter();
+  warmthFilter.type='lowpass';
+  warmthFilter.frequency.value = warmthToFreq(document.getElementById('warmth').value);
+  warmthFilter.Q.value = 0.7;
+
+  dryGain = ctx.createGain();
+  wetGain = ctx.createGain();
+  wetGain.gain.value = document.getElementById('reverb').value/100*0.8;
+
+  convolver = ctx.createConvolver();
+  convolver.buffer = buildImpulse(2.2, 2.5);
+
+  warmthFilter.connect(dryGain);
+  warmthFilter.connect(convolver);
+  convolver.connect(wetGain);
+  dryGain.connect(masterGain);
+  wetGain.connect(masterGain);
+  masterGain.connect(ctx.destination);
+
+  // crackle loop
+  crackleGain = ctx.createGain();
+  crackleGain.gain.value = (document.getElementById('crackle').value/100)*0.05;
+  const crackleFilter = ctx.createBiquadFilter();
+  crackleFilter.type='bandpass';
+  crackleFilter.frequency.value = 2200;
+  crackleFilter.Q.value=0.6;
+  crackleSource = ctx.createBufferSource();
+  crackleSource.buffer = buildCrackleBuffer();
+  crackleSource.loop = true;
+  crackleSource.connect(crackleFilter);
+  crackleFilter.connect(crackleGain);
+  crackleGain.connect(masterGain);
+  crackleSource.start();
+}
+
+function warmthToFreq(val){
+  // 0 -> muffled (350Hz), 100 -> bright (7000Hz), exponential feel
+  const t = val/100;
+  return 350 * Math.pow(20, t);
+}
+
+function noteOn(key){
+  const def = NOTE_DEFS.find(n=>n.key===key);
+  if(!def || activeNotes[key]) return;
+  initAudio();
+  if(ctx.state==='suspended') ctx.resume();
+
+  const now = ctx.currentTime;
+  const noteGain = ctx.createGain();
+  noteGain.gain.setValueAtTime(0,now);
+  noteGain.gain.linearRampToValueAtTime(0.35, now+0.015);
+  noteGain.gain.linearRampToValueAtTime(0.18, now+0.4);
+
+  const osc1 = ctx.createOscillator();
+  osc1.type='triangle';
+  osc1.frequency.value = def.freq;
+  osc1.detune.value = (Math.random()*6-3);
+
+  const osc2 = ctx.createOscillator();
+  osc2.type='sine';
+  osc2.frequency.value = def.freq/2;
+  const subGain = ctx.createGain();
+  subGain.gain.value = 0.25;
+
+  osc1.connect(noteGain);
+  osc2.connect(subGain);
+  subGain.connect(noteGain);
+  noteGain.connect(warmthFilter);
+
+  osc1.start();
+  osc2.start();
+
+  activeNotes[key] = {osc1, osc2, gain:noteGain};
+  setKeyVisual(key, true);
+  updateReel();
+}
+
+function noteOff(key){
+  const n = activeNotes[key];
+  if(!n) return;
+  const now = ctx.currentTime;
+  n.gain.gain.cancelScheduledValues(now);
+  n.gain.gain.setValueAtTime(n.gain.gain.value, now);
+  n.gain.gain.linearRampToValueAtTime(0, now+0.5);
+  n.osc1.stop(now+0.52);
+  n.osc2.stop(now+0.52);
+  delete activeNotes[key];
+  setKeyVisual(key, false);
+  updateReel();
+}
+
+function setKeyVisual(key, on){
+  const el = keyElByKey[key];
+  if(el) el.classList.toggle('active', on);
+}
+
+function updateReel(){
+  const playing = Object.keys(activeNotes).length>0;
+  reelEl.classList.toggle('spinning', playing);
+}
+
+// ---------- input handling ----------
+const heldPhysicalKeys = new Set();
+
+window.addEventListener('keydown', (e)=>{
+  if(e.target.tagName==='INPUT') return;
+  const k = e.key.toLowerCase();
+  if(heldPhysicalKeys.has(k)) return;
+  if(!NOTE_DEFS.find(n=>n.key===k)) return;
+  heldPhysicalKeys.add(k);
+  noteOn(k);
+});
+window.addEventListener('keyup', (e)=>{
+  const k = e.key.toLowerCase();
+  heldPhysicalKeys.delete(k);
+  noteOff(k);
+});
+
+Object.values(keyElByKey).forEach(el=>{
+  const k = el.dataset.key;
+  el.addEventListener('pointerdown', (e)=>{ e.preventDefault(); noteOn(k); });
+  el.addEventListener('pointerup', ()=>noteOff(k));
+  el.addEventListener('pointerleave', ()=>noteOff(k));
+  el.addEventListener('pointercancel', ()=>noteOff(k));
+});
+
+// ---------- knobs ----------
+document.getElementById('volume').addEventListener('input', (e)=>{
+  if(masterGain) masterGain.gain.value = e.target.value/100;
+});
+document.getElementById('warmth').addEventListener('input', (e)=>{
+  if(warmthFilter) warmthFilter.frequency.value = warmthToFreq(e.target.value);
+});
+document.getElementById('reverb').addEventListener('input', (e)=>{
+  if(wetGain) wetGain.gain.value = (e.target.value/100)*0.8;
+});
+document.getElementById('crackle').addEventListener('input', (e)=>{
+  if(crackleGain) crackleGain.gain.value = (e.target.value/100)*0.05;
+});
+
+// ---------- session counter ----------
+let seconds = 0;
+setInterval(()=>{
+  seconds++;
+  const m = String(Math.floor(seconds/60)).padStart(2,'0');
+  const s = String(seconds%60).padStart(2,'0');
+  document.getElementById('counterText').textContent = `${m}:${s}`;
+}, 1000);
+</script>
+</body>
+</html>
